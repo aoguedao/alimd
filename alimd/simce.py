@@ -28,8 +28,8 @@ def input_preprocessing(filepath, sample_by_type=False):
     else:
         logger.info("Using all students.")
 
-    Y = simce.values
-    X = pd.get_dummies(simce.index.get_level_values("type")).values
-    Z = np.vstack([np.ones(simce.shape[1]), simce.columns.values])
+    Y = simce.to_numpy()
+    X = pd.get_dummies(simce.index.get_level_values("type")).to_numpy()
+    Z = np.vstack([np.ones(simce.shape[1]), simce.columns.to_numpy()])
 
     return Y, X, Z

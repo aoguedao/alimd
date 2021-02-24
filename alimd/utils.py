@@ -2,6 +2,14 @@ import numpy as np
 
 from numba import jit, njit, prange
 
+def is_symmetric(A, rtol=1e-05, atol=1e-08):
+    # https://stackoverflow.com/questions/42908334/checking-if-a-matrix-is-symmetric-in-numpy
+    return np.allclose(A, A.T, rtol=rtol, atol=atol)
+
+
+def is_square(A):
+    return A.shape[0] == A.shape[1]
+
 
 @njit
 def vec(A):
@@ -9,10 +17,10 @@ def vec(A):
     return A.T.ravel().reshape(-1, 1)
 
 
-@njit
 def vech(A):
-    m = np.tril(A).T.ravel()
-    return m[np.where(m != 0)].reshape(-1, 1)
+    if not is_square(A):
+        raise Exception("It must be a square matrix.")
+    return A.T[np.triu_indices_from(A)].reshape(-1, 1)
 
 
 @njit(fastmath=True)
@@ -75,15 +83,15 @@ def dup_matrix(n):
     return DT.T
 
 
-# @njit
-# def diag_dup_prod(A, premul=True):
-#     n2, m2 = A.shape
-#     if premul:
-#         n = int(np.sqrt(n2))
-#         return A[::n+1, :]
-#     else:
-#         m = int(np.sqrt(m2))
-#         return A[:, ::m+1]
+@njit
+def diag_dup_prod(A, premul=True):
+    n2, m2 = A.shape
+    if premul:
+        n = int(np.sqrt(n2))
+        return A[::n+1, :]
+    else:
+        m = int(np.sqrt(m2))
+        return A[:, ::m+1]
 
 @njit(parallel=True)
 def dupl_cols(n):
@@ -115,3 +123,12 @@ def kron_diag_dup(A, B):
     for i in prange(n):
         C[:, i] = np.outer(A[:, i], B[:, i]).flatten()
     return C
+
+
+def matrix_properties(a, rtol=1e-05, atol=1e-08):
+    assert a.ndim == 2
+    print(f"Any NaN? {np.isnan(a).any()}")
+    print(f"Any Inf? {np.isinf(a).any()}")
+    print(f"Is Square? {is_square(a)}")
+    print(f"Is Symmetric? {is_symmetric(a, rtol=rtol, atol=atol)}")
+    
