@@ -42,7 +42,7 @@ def main(filepath, outputpath, preprocessed, sample_by_type):
         npzfile = np.load(inputfile)
         Y, X, Z = npzfile["Y"], npzfile["X"], npzfile["Z"]
 
-    L, Delta, F = alimd.gmanova.local_influence(Y, X, Z)
+    L, Delta, F = alimd.gmanova.local_influence(Y, X, Z, cov_structure="uc")
     l_rank = np.linalg.matrix_rank(L, hermitian=True)
 
     logger.info("Computing eigen values.")
