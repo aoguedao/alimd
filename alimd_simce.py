@@ -23,12 +23,15 @@ def main(filepath, outputpath, preprocessed, sample_by_type):
 
     if outputpath is None:
         logger.info("Creating output folder.")
-        tz = timezone(-timedelta(hours=4))
-        start = datetime.now(tz).strftime('%Y-%m-%d-%H%M')
-        outputpath = Path(__file__).resolve().parent.parent / "experiments" / f"{start}"
-        outputpath.mkdir(parents=True, exist_ok=True)
+        # tz = timezone(-timedelta(hours=4))
+        # start = datetime.now(tz).strftime('%Y-%m-%d-%H%M')
+        if sample_by_type != 0:
+            outputpath = Path(__file__).resolve().parent / "output" / f"sample_{sample_by_type}"
+        else:
+            outputpath = Path(__file__).resolve().parent / "output" / f"all_data"
     else:
         outputpath = Path(outputpath)
+    outputpath.mkdir(parents=True, exist_ok=True)
     logger.info(f"Output path: {outputpath}")
 
     if not preprocessed:

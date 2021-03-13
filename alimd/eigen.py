@@ -27,7 +27,7 @@ def smart_eigen(F, L, Delta, outputpath):
 
 def stochastic_eigen(F, rank, outputpath):
     logger.info(f"Stochastic method.")
-    w_reigh, v_reigh = eigen.compute_reigh(F, rank, oversample=10, n_subspace=2)
+    w_reigh, v_reigh = eigen.compute_reigh_nystroem(F, rank, oversample=10, n_subspace=2, random_state=42)
     logger.info(f"Stochastic larger eigen value: {np.abs(w_reigh).max()}")
     reigh_file = open(outputpath / "reigh_eigen.npz", "wb")
     np.savez(reigh_file, w=w_reigh, v=v_reigh)
