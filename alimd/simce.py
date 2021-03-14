@@ -1,35 +1,52 @@
+import logging
 import numpy as np
 import pandas as pd
-import logging
+
+from pathlib import Path
+from sklearn.model_selection import train_test_split
 
 
 logger = logging.getLogger(__name__)
 
 
-def input_preprocessing(filepath, sample_by_type=False):
-    logger.info("Preprocessing files.")
-    simce = (
-        pd.read_csv(filepath)
-        .groupby("RUT")
-        .filter(
-            lambda x: (x["type"].nunique() == 1)
-    #         and (x["gender"].nunique() == 1)
-            and (x["grade"].nunique() == 3)
+def read_input(filepath, sample=None):
+    logger.info("Reading input files.")
+    filepath = Path(filepath)
+    if filepath.suffix == ".csv":
+        logger.info("Reading .csv file")
+        simce = (
+            pd.read_csv(filepath)
+            .groupby("RUT")
+            .filter(
+                lambda x: (x["type"].nunique() == 1)
+        #         and (x["gender"].nunique() == 1)
+                and (x["grade"].nunique() == 3)
+            )
+            .assign(score=lambda x: x["math"])
+            .loc[: ,["RUT", "type", "grade", "score"]]
+            .pivot_table(index=["type", "RUT"], columns="grade", values="score")
+            .sort_index()
         )
-        .assign(score=lambda x: x["math"])
-        .loc[: ,["RUT", "type", "grade", "score"]]
-        .pivot_table(index=["type", "RUT"], columns="grade", values="score")
-        .sort_index()
-    )
-
-    if sample_by_type and isinstance(sample_by_type, int):
-        logger.info(f"Getting {sample_by_type} students per school type.")
-        simce = simce.groupby("type").head(sample_by_type)
+        Y = simce.to_numpy()
+        X = pd.get_dummies(simce.index.get_level_values("type")).to_numpy()
+        Z = np.vstack([np.ones(simce.shape[1]), simce.columns.to_numpy()])
+    elif filepath.suffix == ".npz":
+        logger.info("Reading .npz file")
+        inputfile = open(filepath, 'rb')
+        npzfile = np.load(inputfile)
+        Y, X, Z = npzfile["Y"], npzfile["X"], npzfile["Z"]
     else:
-        logger.info("Using all students.")
-
-    Y = simce.to_numpy()
-    X = pd.get_dummies(simce.index.get_level_values("type")).to_numpy()
-    Z = np.vstack([np.ones(simce.shape[1]), simce.columns.to_numpy()])
-
+        raise NotImplementedError
+    # sample
+    if isinstance(sample, int):
+        logger.info(f"Getting {sample} students.")
+        X, _, Y, _ = train_test_split(
+            X,
+            Y,
+            train_size=sample,
+            stratify=X.argmax(axis=1),
+            random_state=42
+        )
+    else:
+        logger.info("Getting all students.")
     return Y, X, Z
