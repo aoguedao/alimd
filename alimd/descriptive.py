@@ -7,9 +7,10 @@ import matplotlib.pyplot as plt
 
 from pathlib import Path
 
-from alimd.simce import read_simce_csv 
+from alimd.constants import SCHOOL_TYPE_NAMES_DICT, GRADES_NAME_DICT
+from alimd.simce import read_simce_csv
 
-sns.set_theme(style="ticks", palette="pastel")
+sns.set_theme(style="whitegrid", palette="pastel")
 sns.set_context("paper")
 
 logging.basicConfig(level=logging.INFO)
@@ -21,7 +22,7 @@ logging.basicConfig(level=logging.INFO)
 def descriptive(filepath, imagespath):
     filepath = Path(filepath)
     if imagespath is None:
-        imagespath = Path(__file__).resolve().parent / "images"
+        imagespath = Path(__file__).resolve().parent.parent / "images"
     else:
         imagespath = Path(imagespath)
     imagespath.mkdir(parents=True, exist_ok=True)
@@ -34,7 +35,7 @@ def descriptive(filepath, imagespath):
     school_type_distr = (
         simce.reset_index()
         .assign(
-            school_type=lambda x: x["type"].map({1: "Municipal", 2: "Subvencionado", 3: "Particular"}).astype("category")
+            school_type=lambda x: x["type"].map(SCHOOL_TYPE_NAMES_DICT).astype("category")
         )
         .loc[:, "school_type"]
         .pipe(
@@ -59,8 +60,8 @@ def descriptive(filepath, imagespath):
             value_name="Puntaje",
         )
         .assign(
-            school_type=lambda x: x["type"].map({1: "Municipal", 2: "Subvencionado", 3: "Particular"}).astype("category"), 
-            grade=lambda x: x["grade"].map({4: "2007 - 4° Básico", 8: "2011 - 8° Básico", 10: "2013 - II Medio"}).astype("category")
+            school_type=lambda x: x["type"].map(SCHOOL_TYPE_NAMES_DICT).astype("category"), 
+            grade=lambda x: x["grade"].map(GRADES_NAME_DICT).astype("category")
         )
         .rename(columns={"grade": "Año - Curso", "school_type": "Tipo Establecimiento"})
     )

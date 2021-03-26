@@ -11,27 +11,31 @@ import alimd
 
 @click.command()
 @click.option("--filepath", type=str)
+@click.option("--cov", default="uc", type=str)
 @click.option("--outputpath", default=None, type=str)
 @click.option("--sample", default=None, type=int)
-def main(filepath, outputpath, sample):
+def main(filepath, cov, outputpath, sample):
     logger.info(f"File path: {filepath}")
+    if cov in ["uc", "scs"]:
+        logger.info(f"Covariance structure: {cov}")
+    else:
+        raise f"Covariance structure must be 'uc' or 'scs'."
     if outputpath is None:
         logger.info("Making output folder.")
         if sample is not None:
-            outputpath = Path(__file__).resolve().parent / "output" / f"sample_{sample}"
+            outputpath = Path(__file__).resolve().parent / "output" / cov / f"sample_{sample}"
         else:
-            outputpath = Path(__file__).resolve().parent / "output" / "all_data"
+            outputpath = Path(__file__).resolve().parent / "output" / cov / "all_data"
     else:
         outputpath = Path(outputpath)
     outputpath.mkdir(parents=True, exist_ok=True)
     logger.info(f"Output path: {outputpath}")
-
     Y, X, Z = alimd.simce.read_input(filepath, sample)
     yxz_filename = "yxz" if sample is None else f"yxz_sample_{sample}"
     yxz_file = open(outputpath / f"{yxz_filename}.npz", "wb")
     np.savez(yxz_file, X=X, Y=Y, Z=Z)
 
-    L, Delta, F = alimd.gmanova.local_influence(Y, X, Z, cov_structure="uc")
+    L, Delta, F = alimd.gmanova.local_influence(Y, X, Z, cov_structure=cov)
     l_rank = np.linalg.matrix_rank(L, hermitian=True)
 
     logger.info("Computing eigen values.")

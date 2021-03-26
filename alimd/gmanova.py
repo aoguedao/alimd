@@ -47,7 +47,7 @@ def mle_scs(Y, X, Z):
     S = Y.T @ ( Y - X @ xtxixty)
     GAMMA = zztiz @ S @ zztiz.T / n
     # Phi
-    G = linalg.solve(Z, np.zeros(shape=(p - m, q))).T  # TODO
+    G = np.identity(q) - np.linalg.multi_dot([Z.T, zztiz, Z])
     ggtigyt = linalg.solve(G @ G.T, G @ Y.T, assume_a="sym")
     PHI = ggtigyt @ ggtigyt.T / n
     # SIGMA
